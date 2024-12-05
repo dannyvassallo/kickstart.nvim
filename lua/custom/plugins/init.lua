@@ -81,4 +81,56 @@ return {
     'nvim-neo-tree/neo-tree.nvim',
     enabled = false,
   },
+
+  -- Add null-ls for linting and formatting
+  {
+    'jose-elias-alvarez/null-ls.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    lazy = false,
+    config = function()
+      local null_ls = require 'null-ls'
+      null_ls.setup {
+        sources = {
+          null_ls.builtins.formatting.prettier,
+          null_ls.builtins.diagnostics.eslint,
+          null_ls.builtins.code_actions.eslint,
+        },
+      }
+    end,
+  },
+
+  -- Add Treesitter for syntax highlighting and bracket colorization
+  {
+    'nvim-treesitter/nvim-treesitter',
+    lazy = false,
+    build = ':TSUpdate',
+    config = function()
+      require('nvim-treesitter.configs').setup {
+        highlight = {
+          enable = true,
+        },
+        rainbow = {
+          enable = true,
+          extended_mode = true,
+        },
+      }
+    end,
+  },
+
+  -- YAML language server for schema validation
+  {
+    'neovim/nvim-lspconfig',
+    lazy = false,
+    config = function()
+      require('lspconfig').yamlls.setup {
+        settings = {
+          yaml = {
+            schemas = {
+              ['file:///path/to/schema.json'] = '**/definition.yaml',
+            },
+          },
+        },
+      }
+    end,
+  },
 }
