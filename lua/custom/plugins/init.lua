@@ -308,4 +308,50 @@ return {
       }
     end,
   },
+
+  -- { 'mg979/vim-visual-multi' },
+  --
+  {
+    'jake-stewart/multicursor.nvim',
+    branch = '1.0',
+    event = 'VeryLazy',
+    config = function()
+      local mc = require 'multicursor-nvim'
+      mc.setup()
+
+      -- Sublime-style keymaps
+      vim.keymap.set({ 'n', 'v' }, '<C-d>', function()
+        -- If there are no cursors, add one at the next match
+        if not mc.hasCursors() then
+          mc.matchAddCursor(1)
+        else
+          -- If cursors exist, add the next match
+          mc.matchAddCursor(1)
+        end
+      end, { desc = 'Add next occurrence to selection' })
+
+      vim.keymap.set({ 'n', 'v' }, '<C-u>', function()
+        if mc.hasCursors() then
+          -- Remove the last added cursor
+          mc.deleteCursor()
+        else
+          -- Default Ctrl+U behavior (half-page up)
+          vim.cmd 'normal! <C-u>'
+        end
+      end, { desc = 'Undo last selection' })
+
+      -- Optional: Add all occurrences
+      vim.keymap.set({ 'n', 'v' }, '<C-S-l>', mc.matchAllAddCursors, { desc = 'Select all occurrences' })
+
+      -- Clear selections and exit multicursor mode
+      vim.keymap.set({ 'n', 'v' }, '<Esc>', function()
+        if mc.hasCursors() then
+          mc.clearCursors()
+        else
+          -- Default Esc behavior
+          vim.cmd 'normal! <Esc>'
+        end
+      end, { desc = 'Clear selections or exit' })
+    end,
+  },
 }
