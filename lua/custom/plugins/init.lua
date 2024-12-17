@@ -331,4 +331,24 @@ return {
     },
     opts = {},
   },
+
+  {
+    'numToStr/Comment.nvim',
+    opts = {},
+    keys = {
+      -- Add this line to map Cmd+/ for both normal and visual modes
+      { '<D-/>', mode = { 'n', 'v' }, desc = 'Comment toggle' },
+    },
+    config = function(_, opts)
+      require('Comment').setup(opts)
+
+      local api = require 'Comment.api'
+
+      vim.keymap.set('n', '<D-/>', api.toggle.linewise.current, { desc = 'Comment toggle current line' })
+      vim.keymap.set('x', '<D-/>', function()
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<ESC>', true, false, true), 'nx', false)
+        api.toggle.linewise(vim.fn.visualmode())
+      end, { desc = 'Comment toggle linewise (visual)' })
+    end,
+  },
 }
