@@ -351,4 +351,96 @@ return {
       end, { desc = 'Comment toggle linewise (visual)' })
     end,
   },
+
+  -- LSP Configuration for TypeScript
+  {
+    'neovim/nvim-lspconfig',
+    dependencies = {
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
+      'jose-elias-alvarez/typescript.nvim', -- TypeScript utilities
+    },
+    config = function()
+      require('lspconfig').tsserver.setup {
+        on_attach = function(client, bufnr)
+          local bufmap = function(keys, func)
+            vim.keymap.set('n', keys, func, { buffer = bufnr })
+          end
+          bufmap('<leader>co', ':TypescriptOrganizeImports<CR>')
+          bufmap('<leader>cR', ':TypescriptRenameFile<CR>')
+        end,
+      }
+    end,
+  },
+
+  -- Tailwind CSS and Colorizer for Autocomplete
+  {
+    'roobert/tailwindcss-colorizer-cmp.nvim',
+    dependencies = { 'hrsh7th/nvim-cmp' },
+    config = function()
+      require('tailwindcss-colorizer-cmp').setup()
+    end,
+  },
+
+  -- Prettier Formatter
+  {
+    'MunifTanjim/prettier.nvim',
+    dependencies = { 'neovim/nvim-lspconfig' },
+    config = function()
+      require('prettier').setup {
+        bin = 'prettier',
+        filetypes = {
+          'javascript',
+          'typescript',
+          'css',
+          'html',
+          'json',
+          'markdown',
+          'react',
+          'typescriptreact',
+        },
+      }
+    end,
+  },
+
+  -- Treesitter for better syntax highlighting
+  {
+    'nvim-treesitter/nvim-treesitter',
+    build = ':TSUpdate',
+    opts = {
+      ensure_installed = { 'javascript', 'typescript', 'tsx', 'html', 'css', 'json' },
+      highlight = { enable = true },
+      indent = { enable = true },
+    },
+  },
+
+  -- Telescope for fuzzy finding
+  {
+    'nvim-telescope/telescope.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    cmd = 'Telescope',
+    keys = {
+      { '<leader>ff', '<cmd>Telescope find_files<cr>', desc = 'Find Files' },
+      { '<leader>fg', '<cmd>Telescope live_grep<cr>', desc = 'Live Grep' },
+    },
+  },
+
+  -- Git integration
+  {
+    'lewis6991/gitsigns.nvim',
+    config = function()
+      require('gitsigns').setup()
+    end,
+  },
+
+  -- Statusline
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('lualine').setup {
+        options = { theme = 'auto' },
+      }
+    end,
+  },
 }
