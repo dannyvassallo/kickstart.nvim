@@ -2,6 +2,13 @@
 --  I promise not to create any merge conflicts in this directory :)
 --
 -- See the kickstart.nvim README for more information
+
+-- Indent with Cmd+]
+vim.keymap.set('v', '<D-]>', '>gv', { noremap = true, silent = true })
+
+-- Outdent with Cmd+[
+vim.keymap.set('v', '<D-[>', '<gv', { noremap = true, silent = true })
+
 --
 --
 -- auto commands
@@ -252,10 +259,10 @@ return {
   },
 
   -- Optional: Disable Neo-tree if used by LazyVim
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    enabled = false,
-  },
+  --{
+  --'nvim-neo-tree/neo-tree.nvim',
+  --enabled = false,
+  --},
 
   -- Add null-ls for linting and formatting
   {
@@ -309,49 +316,19 @@ return {
     end,
   },
 
-  -- { 'mg979/vim-visual-multi' },
+  { 'mg979/vim-visual-multi' },
   --
+
   {
-    'jake-stewart/multicursor.nvim',
-    branch = '1.0',
+    'https://git.sr.ht/~swaits/zellij-nav.nvim',
+    lazy = true,
     event = 'VeryLazy',
-    config = function()
-      local mc = require 'multicursor-nvim'
-      mc.setup()
-
-      -- Sublime-style keymaps
-      vim.keymap.set({ 'n', 'v' }, '<C-d>', function()
-        -- If there are no cursors, add one at the next match
-        if not mc.hasCursors() then
-          mc.matchAddCursor(1)
-        else
-          -- If cursors exist, add the next match
-          mc.matchAddCursor(1)
-        end
-      end, { desc = 'Add next occurrence to selection' })
-
-      vim.keymap.set({ 'n', 'v' }, '<C-u>', function()
-        if mc.hasCursors() then
-          -- Remove the last added cursor
-          mc.deleteCursor()
-        else
-          -- Default Ctrl+U behavior (half-page up)
-          vim.cmd 'normal! <C-u>'
-        end
-      end, { desc = 'Undo last selection' })
-
-      -- Optional: Add all occurrences
-      vim.keymap.set({ 'n', 'v' }, '<C-S-l>', mc.matchAllAddCursors, { desc = 'Select all occurrences' })
-
-      -- Clear selections and exit multicursor mode
-      vim.keymap.set({ 'n', 'v' }, '<Esc>', function()
-        if mc.hasCursors() then
-          mc.clearCursors()
-        else
-          -- Default Esc behavior
-          vim.cmd 'normal! <Esc>'
-        end
-      end, { desc = 'Clear selections or exit' })
-    end,
+    keys = {
+      { '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { silent = true, desc = 'navigate left or tab' } },
+      { '<c-j>', '<cmd>ZellijNavigateDown<cr>', { silent = true, desc = 'navigate down' } },
+      { '<c-k>', '<cmd>ZellijNavigateUp<cr>', { silent = true, desc = 'navigate up' } },
+      { '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { silent = true, desc = 'navigate right or tab' } },
+    },
+    opts = {},
   },
 }
