@@ -3,14 +3,10 @@
 --
 -- See the kickstart.nvim README for more information
 
--- Indent with Cmd+]
+-- Indentation with brackets
 vim.keymap.set('v', '<D-]>', '>gv', { noremap = true, silent = true })
-
--- Outdent with Cmd+[
 vim.keymap.set('v', '<D-[>', '<gv', { noremap = true, silent = true })
 
---
---
 -- auto commands
 local function augroup(name)
   return vim.api.nvim_create_augroup('mnv_' .. name, { clear = true })
@@ -387,6 +383,32 @@ return {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
       'jose-elias-alvarez/typescript.nvim', -- TypeScript utilities
+    },
+    opts = {
+      servers = {
+        rust_analyzer = {
+          mason = false,
+          cmd = { vim.fn.expand '~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/rust-analyzer' },
+          settings = {
+            ['rust-analyzer'] = {
+              imports = {
+                granularity = {
+                  group = 'module',
+                },
+                prefix = 'self',
+              },
+              cargo = {
+                buildScripts = {
+                  enable = true,
+                },
+              },
+              procMacro = {
+                enable = true,
+              },
+            },
+          },
+        },
+      },
     },
     config = function()
       require('lspconfig').tsserver.setup {
