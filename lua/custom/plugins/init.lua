@@ -316,7 +316,35 @@ return {
     end,
   },
 
-  { 'mg979/vim-visual-multi' },
+  {
+    'mg979/vim-visual-multi',
+    event = 'VeryLazy',
+    init = function()
+      -- Disable default mappings
+      vim.g.VM_default_mappings = 0
+
+      -- Set up custom mappings
+      vim.g.VM_maps = {
+        ['Find Under'] = '<C-d>', -- Ctrl+d to select next occurrence
+        ['Find Subword Under'] = '<C-d>', -- Same for subword
+        ['Select Cursor Down'] = '<C-Down>', -- Ctrl+Down to add cursor below
+        ['Select Cursor Up'] = '<C-Up>', -- Ctrl+Up to add cursor above
+        ['Undo'] = '<C-u>', -- Ctrl+u to undo last selection
+        ['Redo'] = '<C-r>', -- Ctrl+r to redo
+        ['Add Cursor At Pos'] = '<C-LeftMouse>', -- Ctrl+LeftClick to add cursor
+      }
+
+      -- Additional Cmd key mappings for GUI Neovim
+      if vim.fn.has 'gui_running' == 1 then
+        vim.g.VM_maps['Find Under'] = '<D-d>'
+        vim.g.VM_maps['Find Subword Under'] = '<D-d>'
+        vim.g.VM_maps['Undo'] = '<D-u>'
+        vim.g.VM_maps['Redo'] = '<D-r>'
+        vim.g.VM_maps['Add Cursor At Pos'] = '<D-LeftMouse>'
+      end
+    end,
+  },
+
   --
 
   {
