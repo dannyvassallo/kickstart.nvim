@@ -443,4 +443,30 @@ return {
       }
     end,
   },
+
+  {
+    'nvim-telescope/telescope.nvim',
+    keys = {
+      -- Add this line to map Cmd+P to Telescope live_grep
+      { '<C-f>', '<cmd>Telescope live_grep<cr>', desc = 'Grep Files' },
+      { '<D-p>', '<cmd>Telescope find_files<cr>', desc = 'Find Files' },
+    },
+    -- Keep any existing options and configuration you might have
+    opts = {
+      -- Your existing Telescope options here (if any)
+    },
+    config = function(_, opts)
+      require('telescope').setup(opts)
+
+      -- Add an additional keymap for ctrl+f
+      vim.keymap.set('n', '<C-f>', function()
+        require('telescope.builtin').live_grep()
+      end, { desc = 'Grep Files (ctrl+F)' })
+
+      -- Add an additional keymap for Cmd+F
+      vim.keymap.set('n', '<D-p>', function()
+        require('telescope.builtin').find_files()
+      end, { desc = 'Find Files (Cmd+P)' })
+    end,
+  },
 }
