@@ -343,18 +343,18 @@ return {
 
   --
 
-  {
-    'https://git.sr.ht/~swaits/zellij-nav.nvim',
-    lazy = true,
-    event = 'VeryLazy',
-    keys = {
-      { '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { silent = true, desc = 'navigate left or tab' } },
-      { '<c-j>', '<cmd>ZellijNavigateDown<cr>', { silent = true, desc = 'navigate down' } },
-      { '<c-k>', '<cmd>ZellijNavigateUp<cr>', { silent = true, desc = 'navigate up' } },
-      { '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { silent = true, desc = 'navigate right or tab' } },
-    },
-    opts = {},
-  },
+  -- {
+  --   'https://git.sr.ht/~swaits/zellij-nav.nvim',
+  --   lazy = true,
+  --   event = 'VeryLazy',
+  --   keys = {
+  --     { '<c-h>', '<cmd>ZellijNavigateLeftTab<cr>', { silent = true, desc = 'navigate left or tab' } },
+  --     { '<c-j>', '<cmd>ZellijNavigateDown<cr>', { silent = true, desc = 'navigate down' } },
+  --     { '<c-k>', '<cmd>ZellijNavigateUp<cr>', { silent = true, desc = 'navigate up' } },
+  --     { '<c-l>', '<cmd>ZellijNavigateRightTab<cr>', { silent = true, desc = 'navigate right or tab' } },
+  --   },
+  --   opts = {},
+  -- },
 
   {
     'numToStr/Comment.nvim',
@@ -384,6 +384,7 @@ return {
       'williamboman/mason-lspconfig.nvim',
       'jose-elias-alvarez/typescript.nvim', -- TypeScript utilities
     },
+    event = { 'BufReadPre', 'BufNewFile' },
     opts = {
       servers = {
         rust_analyzer = {
@@ -420,6 +421,19 @@ return {
           bufmap('<leader>cR', ':TypescriptRenameFile<CR>')
         end,
       }
+
+      -- Add multiple mappings for "go to definition"
+      local goto_definition = function()
+        vim.lsp.buf.definition()
+      end
+
+      vim.keymap.set('n', '<A-LeftMouse>', goto_definition, { desc = 'Go to definition (Alt+LeftClick)' })
+      vim.keymap.set('n', '<M-LeftMouse>', goto_definition, { desc = 'Go to definition (Meta+LeftClick)' })
+      vim.keymap.set('n', 'gd', goto_definition, { desc = 'Go to definition (gd)' })
+      vim.keymap.set('n', '<C-]>', goto_definition, { desc = 'Go to definition (Ctrl+])' })
+
+      -- Optionally, add a mapping that doesn't require the mouse
+      vim.keymap.set('n', '<leader>gd', goto_definition, { desc = 'Go to definition' })
     end,
   },
 
@@ -517,6 +531,43 @@ return {
       vim.keymap.set('n', '<D-p>', function()
         require('telescope.builtin').find_files()
       end, { desc = 'Find Files (Cmd+P)' })
+    end,
+  },
+
+  {
+    'ruifm/gitlinker.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('gitlinker').setup {
+        opts = {
+          -- Options to customize behavior
+          callbacks = nil, -- Custom remote URL callbacks
+          remote = nil, -- Remote to use (e.g., "origin")
+          add_current_line_on_normal_mode = true, -- Add current line in normal mode
+          action_callback = require('gitlinker.actions').open_in_browser, -- Default action to open in browser
+          print_url = true, -- Print the URL after generation
+          mappings = '<leader>gy', -- Default keybinding to copy the URL
+        },
+      }
+    end,
+  },
+
+  {
+    'APZelos/blamer.nvim',
+    config = function()
+      -- Always enable Blamer
+      vim.g.blamer_enabled = 1
+
+      -- Display Blamer annotations without delay
+      vim.g.blamer_delay = 0
+
+      -- Optional: Customize appearance
+      vim.g.blamer_prefix = '  ' -- Git icon prefix (can be any string)
+      vim.g.blamer_date_format = '%Y-%m-%d' -- Date format for blame messages
+
+      -- Always show blame in all modes
+      vim.g.blamer_show_in_visual_modes = 1
+      vim.g.blamer_show_in_insert_modes = 1
     end,
   },
 }
