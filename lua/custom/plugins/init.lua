@@ -7,6 +7,73 @@
 vim.keymap.set('v', '<D-]>', '>gv', { noremap = true, silent = true })
 vim.keymap.set('v', '<D-[>', '<gv', { noremap = true, silent = true })
 
+-- Copy paste like a normal person
+vim.keymap.set({ 'n', 'v' }, '<D-c>', '"+y', { noremap = true, silent = true })
+vim.keymap.set({ 'n', 'i', 'v' }, '<D-v>', '<C-R>+', { noremap = true, silent = true })
+
+-- New mapping for select all
+vim.keymap.set({ 'n', 'v', 'i' }, '<D-a>', 'ggVG', { noremap = true, silent = true })
+vim.keymap.set('i', '<D-a>', '<Esc>ggVG', { noremap = true, silent = true })
+
+-- Open new files in tabs
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    if vim.bo.buftype ~= 'terminal' then
+      if vim.fn.argc() >= 1 then
+        vim.cmd 'tab all'
+      end
+    end
+  end,
+})
+
+-- Open files in new tabs
+vim.keymap.set('n', 'gf', '<C-W>gf', { noremap = true, silent = true })
+vim.keymap.set('n', '<C-w>f', '<C-W>vgf', { noremap = true, silent = true })
+vim.keymap.set('n', '<C-w>gf', '<C-W>tgf', { noremap = true, silent = true })
+
+-- Custom tabline function
+function custom_tabline()
+  local s = ''
+  for i = 1, vim.fn.tabpagenr '$' do
+    local buflist = vim.fn.tabpagebuflist(i)
+    local winnr = vim.fn.tabpagewinnr(i)
+    local bufnr = buflist[winnr]
+    local bufname = vim.fn.bufname(bufnr)
+    local filename = vim.fn.fnamemodify(bufname, ':t')
+    if filename == '' then
+      filename = '[No Name]'
+    end
+
+    -- Highlight the current tab
+    if i == vim.fn.tabpagenr() then
+      s = s .. '%#TabLineSel#'
+    else
+      s = s .. '%#TabLine#'
+    end
+
+    -- Add the tab number and filename
+    s = s .. ' ' .. i .. ':' .. filename .. ' '
+  end
+
+  -- Fill the rest of the tabline
+  s = s .. '%#TabLineFill#%T'
+
+  return s
+end
+
+vim.o.tabline = '%!v:lua.custom_tabline()'
+vim.o.showtabline = 2
+
+-- Set custom highlight groups for the tabline
+vim.cmd [[
+  hi TabLine      gui=none guibg=#3c3836 guifg=#a89984
+  hi TabLineSel   gui=bold guibg=#504945 guifg=#ebdbb2
+  hi TabLineFill  gui=none guibg=#3c3836
+]]
+
+vim.api.nvim_set_keymap('n', '<LeftMouse>', '<LeftMouse><cmd>tabprevious<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<RightMouse>', '<RightMouse><cmd>tabnext<CR>', { noremap = true, silent = true })
+
 -- auto commands
 local function augroup(name)
   return vim.api.nvim_create_augroup('mnv_' .. name, { clear = true })
@@ -478,17 +545,6 @@ return {
     },
   },
 
-  -- Telescope for fuzzy finding
-  {
-    'nvim-telescope/telescope.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    cmd = 'Telescope',
-    keys = {
-      { '<leader>ff', '<cmd>Telescope find_files<cr>', desc = 'Find Files' },
-      { '<leader>fg', '<cmd>Telescope live_grep<cr>', desc = 'Live Grep' },
-    },
-  },
-
   -- Git integration
   {
     'lewis6991/gitsigns.nvim',
@@ -502,22 +558,73 @@ return {
     'nvim-lualine/lualine.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
+      local function custom_tabline()
+        local tabs = {}
+        for i = 1, vim.fn.tabpagenr '$' do
+          local winnr = vim.fn.tabpagewinnr(i)
+          local buflist = vim.fn.tabpagebuflist(i)
+          local bufnr = buflist[winnr]
+          local bufname = vim.fn.bufname(bufnr)
+          local filename = vim.fn.fnamemodify(bufname, ':t')
+          if filename == '' then
+            filename = '[No Name]'
+          end
+          local tab = string.format(' %d: %s ', i, filename)
+          if i == vim.fn.tabpagenr() then
+            tab = '%#TabLineSel#' .. tab .. '%#TabLine#'
+          else
+            tab = '%#TabLine#' .. tab
+          end
+          table.insert(tabs, tab)
+        end
+        return table.concat(tabs)
+      end
+
       require('lualine').setup {
-        options = { theme = 'auto' },
+        options = {
+          theme = 'auto',
+          globalstatus = true,
+        },
+        sections = {
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff', 'diagnostics' },
+          lualine_c = { 'filename' },
+          lualine_x = { 'encoding', 'fileformat', 'filetype' },
+          lualine_y = { 'progress' },
+          lualine_z = { 'location' },
+        },
+        tabline = {
+          lualine_a = { custom_tabline },
+        },
       }
+
+      -- Enable the custom tabline
+      vim.opt.showtabline = 2 -- Always show tabline
     end,
   },
 
   {
     'nvim-telescope/telescope.nvim',
     keys = {
-      -- Add this line to map Cmd+P to Telescope live_grep
+      -- Add this line to map Cmd+P to Telescope find_files
       { '<C-f>', '<cmd>Telescope live_grep<cr>', desc = 'Grep Files' },
       { '<D-p>', '<cmd>Telescope find_files<cr>', desc = 'Find Files' },
     },
     -- Keep any existing options and configuration you might have
     opts = {
       -- Your existing Telescope options here (if any)
+      defaults = {
+        mappings = {
+          i = {
+            ['<CR>'] = function(bufnr)
+              require('telescope.actions').select_default(bufnr)
+              vim.cmd 'tabclose'
+              vim.cmd 'tabnew'
+              vim.cmd('b' .. vim.fn.bufnr '#')
+            end,
+          },
+        },
+      },
     },
     config = function(_, opts)
       require('telescope').setup(opts)
@@ -527,7 +634,7 @@ return {
         require('telescope.builtin').live_grep()
       end, { desc = 'Grep Files (ctrl+F)' })
 
-      -- Add an additional keymap for Cmd+F
+      -- Add an additional keymap for Cmd+P
       vim.keymap.set('n', '<D-p>', function()
         require('telescope.builtin').find_files()
       end, { desc = 'Find Files (Cmd+P)' })
@@ -568,6 +675,61 @@ return {
       -- Always show blame in all modes
       vim.g.blamer_show_in_visual_modes = 1
       vim.g.blamer_show_in_insert_modes = 1
+    end,
+  },
+
+  {
+    'hrsh7th/nvim-cmp',
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'hrsh7th/cmp-cmdline',
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+    },
+    config = function()
+      local cmp = require 'cmp'
+      local luasnip = require 'luasnip'
+
+      cmp.setup {
+        snippet = {
+          expand = function(args)
+            luasnip.lsp_expand(args.body)
+          end,
+        },
+        mapping = cmp.mapping.preset.insert {
+          ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-f>'] = cmp.mapping.scroll_docs(4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<C-e>'] = cmp.mapping.abort(),
+          ['<CR>'] = cmp.mapping.confirm { select = true },
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+          ['<S-Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { 'i', 's' }),
+        },
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+        }, {
+          { name = 'buffer' },
+        }),
+      }
     end,
   },
 }
