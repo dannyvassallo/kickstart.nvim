@@ -26,54 +26,6 @@ vim.api.nvim_create_autocmd('VimEnter', {
   end,
 })
 
--- Open files in new tabs
-vim.keymap.set('n', 'gf', '<C-W>gf', { noremap = true, silent = true })
-vim.keymap.set('n', '<C-w>f', '<C-W>vgf', { noremap = true, silent = true })
-vim.keymap.set('n', '<C-w>gf', '<C-W>tgf', { noremap = true, silent = true })
-
--- Custom tabline function
-function custom_tabline()
-  local s = ''
-  for i = 1, vim.fn.tabpagenr '$' do
-    local buflist = vim.fn.tabpagebuflist(i)
-    local winnr = vim.fn.tabpagewinnr(i)
-    local bufnr = buflist[winnr]
-    local bufname = vim.fn.bufname(bufnr)
-    local filename = vim.fn.fnamemodify(bufname, ':t')
-    if filename == '' then
-      filename = '[No Name]'
-    end
-
-    -- Highlight the current tab
-    if i == vim.fn.tabpagenr() then
-      s = s .. '%#TabLineSel#'
-    else
-      s = s .. '%#TabLine#'
-    end
-
-    -- Add the tab number and filename
-    s = s .. ' ' .. i .. ':' .. filename .. ' '
-  end
-
-  -- Fill the rest of the tabline
-  s = s .. '%#TabLineFill#%T'
-
-  return s
-end
-
-vim.o.tabline = '%!v:lua.custom_tabline()'
-vim.o.showtabline = 2
-
--- Set custom highlight groups for the tabline
-vim.cmd [[
-  hi TabLine      gui=none guibg=#3c3836 guifg=#a89984
-  hi TabLineSel   gui=bold guibg=#504945 guifg=#ebdbb2
-  hi TabLineFill  gui=none guibg=#3c3836
-]]
-
-vim.api.nvim_set_keymap('n', '<LeftMouse>', '<LeftMouse><cmd>tabprevious<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<RightMouse>', '<RightMouse><cmd>tabnext<CR>', { noremap = true, silent = true })
-
 -- auto commands
 local function augroup(name)
   return vim.api.nvim_create_augroup('mnv_' .. name, { clear = true })
@@ -553,56 +505,6 @@ return {
     end,
   },
 
-  -- Statusline
-  {
-    'nvim-lualine/lualine.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    config = function()
-      local function custom_tabline()
-        local tabs = {}
-        for i = 1, vim.fn.tabpagenr '$' do
-          local winnr = vim.fn.tabpagewinnr(i)
-          local buflist = vim.fn.tabpagebuflist(i)
-          local bufnr = buflist[winnr]
-          local bufname = vim.fn.bufname(bufnr)
-          local filename = vim.fn.fnamemodify(bufname, ':t')
-          if filename == '' then
-            filename = '[No Name]'
-          end
-          local tab = string.format(' %d: %s ', i, filename)
-          if i == vim.fn.tabpagenr() then
-            tab = '%#TabLineSel#' .. tab .. '%#TabLine#'
-          else
-            tab = '%#TabLine#' .. tab
-          end
-          table.insert(tabs, tab)
-        end
-        return table.concat(tabs)
-      end
-
-      require('lualine').setup {
-        options = {
-          theme = 'auto',
-          globalstatus = true,
-        },
-        sections = {
-          lualine_a = { 'mode' },
-          lualine_b = { 'branch', 'diff', 'diagnostics' },
-          lualine_c = { 'filename' },
-          lualine_x = { 'encoding', 'fileformat', 'filetype' },
-          lualine_y = { 'progress' },
-          lualine_z = { 'location' },
-        },
-        tabline = {
-          lualine_a = { custom_tabline },
-        },
-      }
-
-      -- Enable the custom tabline
-      vim.opt.showtabline = 2 -- Always show tabline
-    end,
-  },
-
   {
     'nvim-telescope/telescope.nvim',
     keys = {
@@ -731,5 +633,66 @@ return {
         }),
       }
     end,
+  },
+
+  -- Statusline
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('lualine').setup {
+        options = {
+          theme = 'auto',
+          globalstatus = true,
+        },
+        sections = {
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff', 'diagnostics' },
+          lualine_c = { 'filename' },
+          lualine_x = { 'encoding', 'fileformat', 'filetype' },
+          lualine_y = { 'progress' },
+          lualine_z = { 'location' },
+        },
+        tabline = {
+          lualine_a = { 'buffers' },
+          lualine_b = {},
+          lualine_c = {},
+          lualine_x = {},
+          lualine_y = {},
+          lualine_z = { 'tabs' },
+        },
+      }
+
+      -- Enable the tabline
+      vim.opt.showtabline = 2 -- Always show tabline
+    end,
+  },
+
+  {
+    'romgrk/barbar.nvim',
+    dependencies = {
+      'lewis6991/gitsigns.nvim',
+      'nvim-tree/nvim-web-devicons',
+    },
+    init = function()
+      vim.g.barbar_auto_setup = false
+    end,
+    opts = {
+      -- Your barbar options here
+    },
+    config = function()
+      local map = vim.api.nvim_set_keymap
+      local opts = { noremap = true, silent = true }
+
+      -- Move to previous/next
+      map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
+      map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+      -- Re-order to previous/next
+      map('n', '<A-<>', '<Cmd>BufferMovePrevious<CR>', opts)
+      map('n', '<A->>', '<Cmd>BufferMoveNext<CR>', opts)
+      -- Close buffer
+      map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
+    end,
+    version = '^1.0.0',
   },
 }
